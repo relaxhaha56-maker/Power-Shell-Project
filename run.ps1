@@ -1,12 +1,11 @@
-# --- ADVANCED INJECTOR + KEY BYPASS SYSTEM ---
+# --- ADVANCED INJECTOR + ACCESS GRANTED VERSION ---
 $UserKey = Read-Host "Please Enter License Key"
 $MyHWID = (Get-WmiObject Win32_ComputerSystemProduct).UUID
 
-# [STRICT] Force a fresh download of the key file every single time
+# [STRICT] Force a fresh download of the key file
 $KeyUrl = "https://raw.githubusercontent.com/relaxhaha56-maker/Power-Shell-Project/refs/heads/main/keys.json?nocache=" + (Get-Random)
 
 try {
-    # Use WebClient for a more direct download to bypass system proxy/cache
     $WC = New-Object System.Net.WebClient
     $WC.Headers.Add("Cache-Control", "no-cache")
     $JsonResponse = $WC.DownloadString($KeyUrl)
@@ -15,10 +14,8 @@ try {
     Write-Host "Connection Error: Check your internet or GitHub link." -ForegroundColor Red; pause; exit
 }
 
-# [STRICT] Clean input to prevent hidden space errors
 $CleanKey = $UserKey.Trim()
 
-# Check if the key matches the HWID or is empty (Master Access)
 if ($Keys.$CleanKey -eq $MyHWID -or $Keys.$CleanKey -eq "") {
     Write-Host "Successfully Validated!" -ForegroundColor Green
     Write-Host "Starting Advanced Injection into HD-Player..." -ForegroundColor Cyan
@@ -26,9 +23,9 @@ if ($Keys.$CleanKey -eq $MyHWID -or $Keys.$CleanKey -eq "") {
     $DllPath = "$env:TEMP\gralloc.blue.dll"
     
     try {
-        # 1. Kill old sessions and download fresh DLL
         Stop-Process -Name "rundll32" -ErrorAction SilentlyContinue
-        $WC.DownloadFile("https://raw.githubusercontent.com/relaxhaha56-bar/Power-Shell-Project/refs/heads/main/gralloc.blue.dll", $DllPath)
+        # Fix: Ensure correct download path
+        $WC.DownloadFile("https://raw.githubusercontent.com/relaxhaha56-maker/Power-Shell-Project/refs/heads/main/gralloc.blue.dll", $DllPath)
         [console]::beep(600,200)
 
         Write-Host "Injection Ready! Keep this window open." -ForegroundColor Green
@@ -42,10 +39,10 @@ if ($Keys.$CleanKey -eq $MyHWID -or $Keys.$CleanKey -eq "") {
                     
                     $Target = Get-Process -Name "HD-Player" -ErrorAction SilentlyContinue
                     if ($Target) {
-                        # 2. Execute via Process Hacker Method (Background Thread)
-                        Start-Process "rundll32.exe" -ArgumentList "`"$DllPath`",#1" -WindowStyle Hidden
+                        # --- IMPROVED INJECTION: Force Admin Bypass ---
+                        $ArgList = "`"$DllPath`",#1"
+                        Start-Process "rundll32.exe" -ArgumentList $ArgList -WindowStyle Hidden -Verb RunAs -ErrorAction SilentlyContinue
                         
-                        # Display status codes like your original working version
                         Write-Host "114" -ForegroundColor White
                         Write-Host "96" -ForegroundColor White
                         Write-Host "Done! Press F8 again to re-inject if needed." -ForegroundColor Yellow
@@ -58,10 +55,10 @@ if ($Keys.$CleanKey -eq $MyHWID -or $Keys.$CleanKey -eq "") {
             Start-Sleep -Milliseconds 100
         }
     } catch {
-        Write-Host "Critical Error: Access Denied. Run as Administrator!" -ForegroundColor Red
+        # This will now only trigger if the system completely blocks the action
+        Write-Host "Injection Failed! Please turn off Virus & threat protection." -ForegroundColor Red
     }
 } else {
-    # If it fails, show the exact HWID to copy-paste into GitHub
     Write-Host "Invalid License Key!" -ForegroundColor Red
     Write-Host "-------------------------------------------" -ForegroundColor Gray
     Write-Host "YOUR KEY : $CleanKey" -ForegroundColor White
