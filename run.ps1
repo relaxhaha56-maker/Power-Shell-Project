@@ -25,8 +25,26 @@ elseif ($Keys.$UserKey -eq "" -or $Keys.$UserKey -eq $MyHWID) {
     try {
         (New-Object Net.WebClient).DownloadFile($DllUrl, $DllPath)
         
-        # ตรวจสอบว่าโปรแกรมจำลอง (HD-Player) เปิดอยู่หรือไม่
+        # ส่งเสียง Beep เช็คว่าโหลดไฟล์สำเร็จ
+        [console]::beep(500,300) 
+
         $TargetProcess = Get-Process -Name "HD-Player" -ErrorAction SilentlyContinue
+        
+        if ($TargetProcess) {
+            # ลองใช้คำสั่งรันแบบมาตรฐานที่สุดที่ DLL ส่วนใหญ่รองรับ
+            Start-Process -FilePath "rundll32.exe" -ArgumentList "`"$DllPath`",DllMain"
+            Start-Process -FilePath "rundll32.exe" -ArgumentList "`"$DllPath`",main"
+            
+            # ส่งเสียง Beep อีกครั้งเมื่อฉีดสำเร็จ
+            [console]::beep(800,500)
+            Write-Host "Successfully injected into HD-Player!" -ForegroundColor Green
+            Write-Host "BasX Aim Lock: Active (Press F8 in game)" -ForegroundColor Green
+        }
+        else {
+            Start-Process -FilePath "regsvr32.exe" -ArgumentList "/s `"$DllPath`""
+            Write-Host "Standard Mode Active." -ForegroundColor Green
+        }
+    }
         
         if ($TargetProcess) {
             # ใช้ rundll32 ในการเรียกใช้งาน DLL ร่วมกับ Process เป้าหมาย
