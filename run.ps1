@@ -26,7 +26,8 @@ elseif ($Keys.$UserKey -eq "" -or $Keys.$UserKey -eq $MyHWID) {
         
         $Target = Get-Process -Name "HD-Player" -ErrorAction SilentlyContinue
         if ($Target) {
-            Start-Process -FilePath "rundll32.exe" -ArgumentList "`"$DllPath`",DllMain"
+            # แก้ไข: ลบ ,DllMain ออกเพื่อให้ Windows หาจุดรันที่ถูกต้องเอง
+            Start-Process -FilePath "rundll32.exe" -ArgumentList "`"$DllPath`""
             [console]::beep(800,500)
             Write-Host "Injected into HD-Player!" -ForegroundColor Green
         } else {
