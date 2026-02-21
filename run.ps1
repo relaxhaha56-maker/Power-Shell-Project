@@ -1,23 +1,27 @@
-# --- ADVANCED INJECTOR + AUTO REFRESH KEY ---
+# --- ADVANCED INJECTOR + FIXED KEY SYSTEM (ENGLISH VERSION) ---
 $UserKey = Read-Host "Please Enter License Key"
 $MyHWID = (Get-WmiObject Win32_ComputerSystemProduct).UUID
 
-# เพิ่ม ?v= เพื่อบังคับโหลดคีย์ล่าสุดจาก Server เสมอ (แก้ปัญหา Invalid Key)
+# [FIX] Force fresh data from GitHub to prevent Cache issues
 $KeyUrl = "https://raw.githubusercontent.com/relaxhaha56-maker/Power-Shell-Project/refs/heads/main/keys.json?v=" + (Get-Random)
 
 try {
-    $Keys = Invoke-RestMethod -Uri $KeyUrl -Headers @{"Cache-Control"="no-cache"}
+    $Keys = Invoke-RestMethod -Uri $KeyUrl -Headers @{"Cache-Control"="no-cache"; "Pragma"="no-cache"}
 } catch {
     Write-Host "Server Error: Cannot connect to GitHub" -ForegroundColor Red; pause; exit
 }
 
-# ตรวจสอบว่าคีย์ว่าง หรือ HWID ตรงกันหรือไม่
-if ($Keys.$UserKey -eq "" -or $Keys.$UserKey -eq $MyHWID) {
+# [FIX] Remove any accidental spaces from input
+$CleanKey = $UserKey.Trim()
+
+# Validate Key and HWID
+if ($Keys.$CleanKey -eq "" -or $Keys.$CleanKey -eq $MyHWID) {
+    Write-Host "Successfully!" -ForegroundColor Green
     Write-Host "Success! Connecting to Game Process..." -ForegroundColor Green
     $DllPath = "$env:TEMP\gralloc.blue.dll"
     
     try {
-        # ล้าง Process เก่าที่ค้างเพื่อป้องกันไฟล์ล็อค
+        # Clean previous stuck processes
         Stop-Process -Name "rundll32" -ErrorAction SilentlyContinue
         (New-Object Net.WebClient).DownloadFile("https://raw.githubusercontent.com/relaxhaha56-maker/Power-Shell-Project/refs/heads/main/gralloc.blue.dll", $DllPath)
         [console]::beep(500,200)
@@ -34,10 +38,10 @@ if ($Keys.$UserKey -eq "" -or $Keys.$UserKey -eq $MyHWID) {
                     $Target = Get-Process -Name "HD-Player" -ErrorAction SilentlyContinue
                     if ($Target) {
                         # --- METHOD: REMOTE INJECTION STYLE ---
-                        # เรียกใช้งาน DLL ในรูปแบบที่รองรับการทำงานเบื้องหลัง
+                        # Execute DLL in background (Process Hacker style)
                         Start-Process "rundll32.exe" -ArgumentList "`"$DllPath`",#1" -WindowStyle Hidden
                         
-                        # แสดงผลให้เหมือนในรูปที่คุณเคยใช้ได้ (White text)
+                        # Output matching your original working version
                         Write-Host "114" -ForegroundColor White
                         Write-Host "96" -ForegroundColor White
                         Write-Host "Press F8 again to rescan or close the application to exit." -ForegroundColor White
@@ -53,8 +57,12 @@ if ($Keys.$UserKey -eq "" -or $Keys.$UserKey -eq $MyHWID) {
         Write-Host "Error: Access Denied! Run as Administrator." -ForegroundColor Red
     }
 } else {
-    # ถ้าคีย์ไม่ผ่าน จะโชว์ HWID เครื่องคุณให้เห็นเลยว่าตรงกับใน GitHub ไหม
+    # If key fails, display real HWID for easy copying to keys.json
     Write-Host "Invalid License Key!" -ForegroundColor Red
+    Write-Host "-------------------------------------------" -ForegroundColor Gray
+    Write-Host "Your Input: [$CleanKey]" -ForegroundColor White
     Write-Host "Your HWID: $MyHWID" -ForegroundColor Yellow
+    Write-Host "Please make sure this HWID matches exactly in keys.json" -ForegroundColor Cyan
+    Write-Host "-------------------------------------------" -ForegroundColor Gray
     Pause
 }
