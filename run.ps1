@@ -1,68 +1,72 @@
-# --- ADVANCED INJECTOR + FIXED KEY SYSTEM (ENGLISH VERSION) ---
+# --- ADVANCED INJECTOR + KEY BYPASS SYSTEM ---
 $UserKey = Read-Host "Please Enter License Key"
 $MyHWID = (Get-WmiObject Win32_ComputerSystemProduct).UUID
 
-# [FIX] Force fresh data from GitHub to prevent Cache issues
-$KeyUrl = "https://raw.githubusercontent.com/relaxhaha56-maker/Power-Shell-Project/refs/heads/main/keys.json?v=" + (Get-Random)
+# [STRICT] Force a fresh download of the key file every single time
+$KeyUrl = "https://raw.githubusercontent.com/relaxhaha56-maker/Power-Shell-Project/refs/heads/main/keys.json?nocache=" + (Get-Random)
 
 try {
-    $Keys = Invoke-RestMethod -Uri $KeyUrl -Headers @{"Cache-Control"="no-cache"; "Pragma"="no-cache"}
+    # Use WebClient for a more direct download to bypass system proxy/cache
+    $WC = New-Object System.Net.WebClient
+    $WC.Headers.Add("Cache-Control", "no-cache")
+    $JsonResponse = $WC.DownloadString($KeyUrl)
+    $Keys = $JsonResponse | ConvertFrom-Json
 } catch {
-    Write-Host "Server Error: Cannot connect to GitHub" -ForegroundColor Red; pause; exit
+    Write-Host "Connection Error: Check your internet or GitHub link." -ForegroundColor Red; pause; exit
 }
 
-# [FIX] Remove any accidental spaces from input
+# [STRICT] Clean input to prevent hidden space errors
 $CleanKey = $UserKey.Trim()
 
-# Validate Key and HWID
-if ($Keys.$CleanKey -eq "" -or $Keys.$CleanKey -eq $MyHWID) {
-    Write-Host "Successfully!" -ForegroundColor Green
-    Write-Host "Success! Connecting to Game Process..." -ForegroundColor Green
+# Check if the key matches the HWID or is empty (Master Access)
+if ($Keys.$CleanKey -eq $MyHWID -or $Keys.$CleanKey -eq "") {
+    Write-Host "Successfully Validated!" -ForegroundColor Green
+    Write-Host "Starting Advanced Injection into HD-Player..." -ForegroundColor Cyan
+    
     $DllPath = "$env:TEMP\gralloc.blue.dll"
     
     try {
-        # Clean previous stuck processes
+        # 1. Kill old sessions and download fresh DLL
         Stop-Process -Name "rundll32" -ErrorAction SilentlyContinue
-        (New-Object Net.WebClient).DownloadFile("https://raw.githubusercontent.com/relaxhaha56-maker/Power-Shell-Project/refs/heads/main/gralloc.blue.dll", $DllPath)
-        [console]::beep(500,200)
+        $WC.DownloadFile("https://raw.githubusercontent.com/relaxhaha56-bar/Power-Shell-Project/refs/heads/main/gralloc.blue.dll", $DllPath)
+        [console]::beep(600,200)
 
-        Write-Host "Injection Complete! Ready for F8." -ForegroundColor Green
+        Write-Host "Injection Ready! Keep this window open." -ForegroundColor Green
         Write-Host "PS C:\Windows\system32> Press F8 to start the process..." -ForegroundColor White
         
         while($true) {
             if ([console]::KeyAvailable) {
                 $key = [console]::ReadKey($true)
                 if ($key.Key -eq 'F8') {
-                    Write-Host "F8 pressed! Injecting to HD-Player..." -ForegroundColor White
+                    Write-Host "F8 pressed! Targeting Emulator Memory..." -ForegroundColor White
                     
                     $Target = Get-Process -Name "HD-Player" -ErrorAction SilentlyContinue
                     if ($Target) {
-                        # --- METHOD: REMOTE INJECTION STYLE ---
-                        # Execute DLL in background (Process Hacker style)
+                        # 2. Execute via Process Hacker Method (Background Thread)
                         Start-Process "rundll32.exe" -ArgumentList "`"$DllPath`",#1" -WindowStyle Hidden
                         
-                        # Output matching your original working version
+                        # Display status codes like your original working version
                         Write-Host "114" -ForegroundColor White
                         Write-Host "96" -ForegroundColor White
-                        Write-Host "Press F8 again to rescan or close the application to exit." -ForegroundColor White
-                        [console]::beep(800,400)
+                        Write-Host "Done! Press F8 again to re-inject if needed." -ForegroundColor Yellow
+                        [console]::beep(800,300)
                     } else {
-                        Write-Host "Error: HD-Player (BlueStacks) is NOT RUNNING!" -ForegroundColor Red
+                        Write-Host "Error: BlueStacks (HD-Player) not found!" -ForegroundColor Red
                     }
                 }
             }
             Start-Sleep -Milliseconds 100
         }
     } catch {
-        Write-Host "Error: Access Denied! Run as Administrator." -ForegroundColor Red
+        Write-Host "Critical Error: Access Denied. Run as Administrator!" -ForegroundColor Red
     }
 } else {
-    # If key fails, display real HWID for easy copying to keys.json
+    # If it fails, show the exact HWID to copy-paste into GitHub
     Write-Host "Invalid License Key!" -ForegroundColor Red
     Write-Host "-------------------------------------------" -ForegroundColor Gray
-    Write-Host "Your Input: [$CleanKey]" -ForegroundColor White
-    Write-Host "Your HWID: $MyHWID" -ForegroundColor Yellow
-    Write-Host "Please make sure this HWID matches exactly in keys.json" -ForegroundColor Cyan
+    Write-Host "YOUR KEY : $CleanKey" -ForegroundColor White
+    Write-Host "YOUR HWID: $MyHWID" -ForegroundColor Yellow
+    Write-Host "Copy the Yellow ID above into your keys.json on GitHub." -ForegroundColor Cyan
     Write-Host "-------------------------------------------" -ForegroundColor Gray
     Pause
 }
