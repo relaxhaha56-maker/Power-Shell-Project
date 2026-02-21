@@ -28,4 +28,6 @@ elseif ($Keys.$UserKey -eq "" -or $Keys.$UserKey -eq $MyHWID) {
 }
 else {
     Write-Host "Invalid HWID!" -ForegroundColor Yellow
+    Write-Host "Your HWID is: $MyHWID" -ForegroundColor White
+    Write-Host "Please send this ID to the admin to lock your license."
 }
