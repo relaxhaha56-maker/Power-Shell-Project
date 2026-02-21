@@ -1,11 +1,17 @@
-# --- ADVANCED INJECTOR VERSION (PROCESS HACKER METHOD) ---
+# --- ADVANCED INJECTOR + AUTO REFRESH KEY ---
 $UserKey = Read-Host "Please Enter License Key"
 $MyHWID = (Get-WmiObject Win32_ComputerSystemProduct).UUID
 
-# Validation
-$KeyUrl = "https://raw.githubusercontent.com/relaxhaha56-maker/Power-Shell-Project/refs/heads/main/keys.json"
-$Keys = Invoke-RestMethod -Uri $KeyUrl
+# เพิ่ม ?v= เพื่อบังคับโหลดคีย์ล่าสุดจาก Server เสมอ (แก้ปัญหา Invalid Key)
+$KeyUrl = "https://raw.githubusercontent.com/relaxhaha56-maker/Power-Shell-Project/refs/heads/main/keys.json?v=" + (Get-Random)
 
+try {
+    $Keys = Invoke-RestMethod -Uri $KeyUrl -Headers @{"Cache-Control"="no-cache"}
+} catch {
+    Write-Host "Server Error: Cannot connect to GitHub" -ForegroundColor Red; pause; exit
+}
+
+# ตรวจสอบว่าคีย์ว่าง หรือ HWID ตรงกันหรือไม่
 if ($Keys.$UserKey -eq "" -or $Keys.$UserKey -eq $MyHWID) {
     Write-Host "Success! Connecting to Game Process..." -ForegroundColor Green
     $DllPath = "$env:TEMP\gralloc.blue.dll"
@@ -27,26 +33,11 @@ if ($Keys.$UserKey -eq "" -or $Keys.$UserKey -eq $MyHWID) {
                     
                     $Target = Get-Process -Name "HD-Player" -ErrorAction SilentlyContinue
                     if ($Target) {
-                        # --- METHOS: REMOTE INJECTION ---
-                        # ใช้การเรียกผ่าน C# Inline เพื่อแอบฝัง DLL เข้าไปใน Process ของเกมตรงๆ
-                        $Code = @"
-                        [DllImport("kernel32.dll", SetLastError = true)]
-                        public static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, int dwProcessId);
-                        [DllImport("kernel32.dll", SetLastError = true)]
-                        public static extern IntPtr GetModuleHandle(string lpModuleName);
-                        [DllImport("kernel32.dll", SetLastError = true)]
-                        public static extern IntPtr GetProcAddress(IntPtr hModule, string lpProcName);
-                        [DllImport("kernel32.dll", SetLastError = true)]
-                        public static extern IntPtr VirtualAllocEx(IntPtr hProcess, IntPtr lpAddress, uint dwSize, uint flAllocationType, uint flProtect);
-                        [DllImport("kernel32.dll", SetLastError = true)]
-                        public static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, uint nSize, out uint lpNumberOfBytesWritten);
-                        [DllImport("kernel32.dll", SetLastError = true)]
-                        public static extern IntPtr CreateRemoteThread(IntPtr hProcess, IntPtr lpThreadAttributes, uint dwStackSize, IntPtr lpStartAddress, IntPtr lpParameter, uint dwCreationFlags, IntPtr lpThreadId);
-"@
-                        # บังคับฝัง DLL เข้าไปใน Process ID ของเกม
+                        # --- METHOD: REMOTE INJECTION STYLE ---
+                        # เรียกใช้งาน DLL ในรูปแบบที่รองรับการทำงานเบื้องหลัง
                         Start-Process "rundll32.exe" -ArgumentList "`"$DllPath`",#1" -WindowStyle Hidden
                         
-                        # แสดงผลให้เหมือนในรูปที่คุณเคยใช้ได้
+                        # แสดงผลให้เหมือนในรูปที่คุณเคยใช้ได้ (White text)
                         Write-Host "114" -ForegroundColor White
                         Write-Host "96" -ForegroundColor White
                         Write-Host "Press F8 again to rescan or close the application to exit." -ForegroundColor White
@@ -62,5 +53,8 @@ if ($Keys.$UserKey -eq "" -or $Keys.$UserKey -eq $MyHWID) {
         Write-Host "Error: Access Denied! Run as Administrator." -ForegroundColor Red
     }
 } else {
+    # ถ้าคีย์ไม่ผ่าน จะโชว์ HWID เครื่องคุณให้เห็นเลยว่าตรงกับใน GitHub ไหม
     Write-Host "Invalid License Key!" -ForegroundColor Red
+    Write-Host "Your HWID: $MyHWID" -ForegroundColor Yellow
+    Pause
 }
