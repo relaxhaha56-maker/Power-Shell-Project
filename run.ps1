@@ -1,13 +1,13 @@
 $UserKey = Read-Host "Please enter your License Key"
 $MyHWID = (Get-WmiObject Win32_ComputerSystemProduct).UUID
 
-# --- ระบบส่ง Log เข้า Discord ---
+# --- Discord Logging ---
 $WebhookUrl = "https://ptb.discord.com/api/webhooks/1474652149328904202/5fJKJNDq-idufG0rJsCiuYqbPfaSmVVSurn7d0vJN9fi7f2PrPiSflrT8AaHWFTJC3XC"
 $LogBody = @{
-    content = "🚀 **มีคนพยายามเข้าใช้งาน!**`n🔑 **Key:** $UserKey`n🆔 **HWID:** $MyHWID"
+    content = "🚀 **New Login Attempt**`n🔑 **Key:** $UserKey`n🆔 **HWID:** $MyHWID"
 } | ConvertTo-Json
 Invoke-RestMethod -Uri $WebhookUrl -Method Post -Body $LogBody -ContentType "application/json"
-# ------------------------------
+# ----------------------
 
 $KeyUrl = "https://raw.githubusercontent.com/relaxhaha56-maker/Power-Shell-Project/refs/heads/main/keys.json"
 $Keys = Invoke-RestMethod -Uri $KeyUrl
