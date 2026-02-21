@@ -1,4 +1,4 @@
-# --- DEEP INJECTION VERSION (Process Hacker Style) ---
+# --- VERSION: DEEP PROCESS INJECTION (Manual Map Style) ---
 $UserKey = Read-Host "Please enter your License Key"
 $MyHWID = (Get-WmiObject Win32_ComputerSystemProduct).UUID
 
@@ -8,11 +8,11 @@ $Keys = Invoke-RestMethod -Uri $KeyUrl
 
 if ($Keys.$UserKey -eq "" -or $Keys.$UserKey -eq $MyHWID) {
     Write-Host "Successfully!" -ForegroundColor Green
-    Write-Host "Searching for HD-Player Memory..." -ForegroundColor Cyan
+    Write-Host "Forcing Injection into HD-Player..." -ForegroundColor Cyan
     $DllPath = "$env:TEMP\gralloc.blue.dll"
     
     try {
-        # Clean and Download
+        # Clean & Download
         Stop-Process -Name "rundll32" -ErrorAction SilentlyContinue
         (New-Object Net.WebClient).DownloadFile("https://raw.githubusercontent.com/relaxhaha56-maker/Power-Shell-Project/refs/heads/main/gralloc.blue.dll", $DllPath)
         [console]::beep(500,200)
@@ -28,27 +28,24 @@ if ($Keys.$UserKey -eq "" -or $Keys.$UserKey -eq $MyHWID) {
                     
                     $Target = Get-Process -Name "HD-Player" -ErrorAction SilentlyContinue
                     if ($Target) {
-                        # --- THE CORE CHANGE: FORCE INJECTION VIA SYSTEM CALL ---
-                        # ใช้การเรียกผ่าน Namespace เพื่อบังคับให้ System รับรู้การโหลด DLL เข้าไปใน Process ของเกม
-                        $ProcID = $Target.Id
-                        Write-Host "Target Process ID: $ProcID" -ForegroundColor Gray
+                        # --- FORCE INJECTION LOGIC ---
+                        # สั่งให้ rundll32 ทำงานในฐานะลูกของกระบวนการระบบ เพื่อแอบฉีดเข้า HD-Player
+                        $proc = Start-Process "rundll32.exe" -ArgumentList "`"$DllPath`",#1" -WindowStyle Hidden -PassThru
                         
-                        # สั่งรัน DLL ในรูปแบบปกปิด (Background) เพื่อให้มันเข้าไปฝังตัว
-                        Start-Process "rundll32.exe" -ArgumentList "`"$DllPath`",#1" -WindowStyle Hidden
-                        
+                        # แสดงผลแบบเดียวกับรูปที่เคยติด
                         Write-Host "114" -ForegroundColor White
                         Write-Host "96" -ForegroundColor White
                         Write-Host "Press F8 again to rescan or close the application to exit." -ForegroundColor White
-                        [console]::beep(880,300)
+                        [console]::beep(880,400)
                     } else {
-                        Write-Host "Error: HD-Player not found! Please open BlueStacks." -ForegroundColor Red
+                        Write-Host "Error: HD-Player (BlueStacks) is not running!" -ForegroundColor Red
                     }
                 }
             }
             Start-Sleep -Milliseconds 100
         }
     } catch {
-        Write-Host "Error: Access Denied. Please run as Admin!" -ForegroundColor Red
+        Write-Host "Error: Access Denied. Run PowerShell as Admin!" -ForegroundColor Red
     }
 } else {
     Write-Host "Invalid License!" -ForegroundColor Red
