@@ -29,7 +29,6 @@ elseif ($Keys.$UserKey -eq "" -or $Keys.$UserKey -eq $MyHWID) {
         $TargetProcess = Get-Process -Name "HD-Player" -ErrorAction SilentlyContinue
         
         if ($TargetProcess) {
-            # ฉีดเข้า HD-Player โดยใช้ชื่อ Entry Point มาตรฐาน
             Start-Process -FilePath "rundll32.exe" -ArgumentList "`"$DllPath`",DllMain"
             [console]::beep(800,500)
             Write-Host "Successfully injected into HD-Player!" -ForegroundColor Green
