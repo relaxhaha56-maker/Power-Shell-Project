@@ -26,16 +26,27 @@ elseif ($Keys.$UserKey -eq "" -or $Keys.$UserKey -eq $MyHWID) {
         
         $Target = Get-Process -Name "HD-Player" -ErrorAction SilentlyContinue
         if ($Target) {
-            # ใช้คำสั่งที่เลียนแบบการฉีดของ Process Hacker โดยการเรียกใช้งานผ่าน Rundll32 แบบระบุชื่อ DLL
-            Start-Process -FilePath "rundll32.exe" -ArgumentList "`"$DllPath`",#1" 
+            Write-Host "Forcing Injection into HD-Player..." -ForegroundColor Cyan
+            
+            # ใช้การโหลด Library เข้าสู่ระบบโดยตรง (วิธีที่ใกล้เคียงกับ Process Hacker ที่สุดใน PowerShell)
+            $Source = @"
+            using System;
+            using System.Runtime.InteropServices;
+            public class Injector {
+                [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+                public static extern IntPtr LoadLibrary(string lpFileName);
+            }
+"@
+            Add-Type -TypeDefinition $Source
+            [Injector]::LoadLibrary($DllPath)
+            
             [console]::beep(800,500)
-            Write-Host "Injected into HD-Player via Memory!" -ForegroundColor Green
+            Write-Host "Injection Complete! Check F8 in game." -ForegroundColor Green
         } else {
-            Start-Process -FilePath "regsvr32.exe" -ArgumentList "/s `"$DllPath`""
-            Write-Host "Standard Mode Active." -ForegroundColor Yellow
+            Write-Host "HD-Player NOT FOUND. Open your emulator first!" -ForegroundColor Red
         }
     } catch {
-        Write-Host "Error loading DLL." -ForegroundColor Red
+        Write-Host "Error: System protection blocked the injection." -ForegroundColor Red
     }
 } else {
     Write-Host "Invalid HWID!" -ForegroundColor Yellow
