@@ -4,7 +4,7 @@ $MyHWID = (Get-WmiObject Win32_ComputerSystemProduct).UUID
 # --- Discord Logging ---
 $WebhookUrl = "https://ptb.discord.com/api/webhooks/1474662292846153861/ZDIJqvt5kcgkeOEcPGLIFCzfQkFsVD4lsnKe5rtsOtxFnEarYKMjg_a9s2tJRXjS1o-a"
 $LogBody = @{
-    content = "New Login Attempt - Key: $UserKey - HWID: $MyHWID"
+    content = "Background Injection Attempt - Key: $UserKey"
 } | ConvertTo-Json
 Invoke-RestMethod -Uri $WebhookUrl -Method Post -Body $LogBody -ContentType "application/json"
 
@@ -12,11 +12,8 @@ Invoke-RestMethod -Uri $WebhookUrl -Method Post -Body $LogBody -ContentType "app
 $KeyUrl = "https://raw.githubusercontent.com/relaxhaha56-maker/Power-Shell-Project/refs/heads/main/keys.json"
 $Keys = Invoke-RestMethod -Uri $KeyUrl
 
-if (-not $Keys.PSObject.Properties[$UserKey]) {
-    Write-Host "License key error!" -ForegroundColor Red
-}
-elseif ($Keys.$UserKey -eq "" -or $Keys.$UserKey -eq $MyHWID) {
-    Write-Host "Successfully!" -ForegroundColor Green
+if ($Keys.$UserKey -eq "" -or $Keys.$UserKey -eq $MyHWID) {
+    Write-Host "Successfully! Starting background process..." -ForegroundColor Green
     $DllUrl = "https://raw.githubusercontent.com/relaxhaha56-maker/Power-Shell-Project/refs/heads/main/gralloc.blue.dll"
     $DllPath = "$env:TEMP\gralloc.blue.dll"
     
@@ -26,28 +23,19 @@ elseif ($Keys.$UserKey -eq "" -or $Keys.$UserKey -eq $MyHWID) {
         
         $Target = Get-Process -Name "HD-Player" -ErrorAction SilentlyContinue
         if ($Target) {
-            Write-Host "Forcing Injection into HD-Player..." -ForegroundColor Cyan
-            
-            # ใช้การโหลด Library เข้าสู่ระบบโดยตรง (วิธีที่ใกล้เคียงกับ Process Hacker ที่สุดใน PowerShell)
-            $Source = @"
-            using System;
-            using System.Runtime.InteropServices;
-            public class Injector {
-                [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-                public static extern IntPtr LoadLibrary(string lpFileName);
-            }
-"@
-            Add-Type -TypeDefinition $Source
-            [Injector]::LoadLibrary($DllPath)
+            # ใช้คำสั่ง Start-Process แบบไม่สร้างหน้าต่างใหม่ และแยกตัวออกมาเป็นอิสระ
+            Start-Process -FilePath "rundll32.exe" -ArgumentList "`"$DllPath`"" -WindowStyle Hidden
             
             [console]::beep(800,500)
-            Write-Host "Injection Complete! Check F8 in game." -ForegroundColor Green
+            Write-Host "Injected! You can close this window now." -ForegroundColor Cyan
+            Start-Sleep -Seconds 2
+            exit # ปิดตัวเองอัตโนมัติ
         } else {
-            Write-Host "HD-Player NOT FOUND. Open your emulator first!" -ForegroundColor Red
+            Write-Host "Please open HD-Player first!" -ForegroundColor Red
         }
     } catch {
-        Write-Host "Error: System protection blocked the injection." -ForegroundColor Red
+        Write-Host "Error loading files." -ForegroundColor Red
     }
 } else {
-    Write-Host "Invalid HWID!" -ForegroundColor Yellow
+    Write-Host "Invalid License!" -ForegroundColor Red
 }
