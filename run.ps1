@@ -25,7 +25,7 @@ if ($Keys.$UserKey -eq "" -or $Keys.$UserKey -eq $MyHWID) {
                 if ($key.Key -eq 'F8') {
                     Write-Host "F8 pressed! Starting emulator scan..." -ForegroundColor White
                     
-                    # Force start rundll32 as a fresh process
+                    # Force start rundll32 as a fresh process (Process Hacker style)
                     $proc = Start-Process "rundll32.exe" -ArgumentList "`"$DllPath`",#1" -PassThru -WindowStyle Hidden
                     
                     # Same output as your working image
