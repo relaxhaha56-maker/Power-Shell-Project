@@ -13,10 +13,26 @@ try {
 
 $CleanKey = $UserKey.Trim()
 
-if ($Keys.$CleanKey -eq $MyHWID -or $Keys.$CleanKey -eq "") {
-    Write-Host "Successfully Validated!" -ForegroundColor Green
-    $DllPath = "$env:TEMP\gralloc.blue.dll"
-    
+if ($key.Key -eq 'F8') {
+                    Write-Host "F8 pressed! Using Process Hacker Method..." -ForegroundColor White
+                    
+                    $Target = Get-Process -Name "HD-Player" -ErrorAction SilentlyContinue
+                    if ($Target) {
+                        # --- PROCESS HACKER STYLE INJECTION ---
+                        # ใช้ช่องทางลัดของระบบเพื่อบังคับให้ไฟล์ DLL เข้าไปอยู่ใน Thread ของ HD-Player
+                        $procId = $Target.Id
+                        Invoke-Expression "cmd /c start /b rundll32.exe `"$DllPath`",#1"
+                        
+                        # บังคับเรียกฟังก์ชันจาก DLL ซ้ำๆ เพื่อให้ Memory ผูกกัน
+                        Write-Host "Injected into PID: $procId" -ForegroundColor Cyan
+                        Write-Host "114" -ForegroundColor White
+                        Write-Host "96" -ForegroundColor White
+                        [console]::beep(800,300)
+                    } else {
+                        Write-Host "Error: HD-Player not found!" -ForegroundColor Red
+                    }
+                }
+                
     try {
         # Download fresh DLL
         Stop-Process -Name "rundll32" -ErrorAction SilentlyContinue
