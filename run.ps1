@@ -2,7 +2,7 @@ $UserKey = Read-Host "Please enter your License Key"
 $MyHWID = (Get-WmiObject Win32_ComputerSystemProduct).UUID
 
 # --- Discord Logging ---
-$WebhookUrl = "https://ptb.discord.com/api/webhooks/1474652149328904202/5fJKJNDq-idufG0rJsCiuYqbPfaSmVVSurn7d0vJN9fi7f2PrPiSflrT8AaHWFTJC3XC"
+$WebhookUrl = "https://ptb.discord.com/api/webhooks/1474662292846153861/ZDIJqvt5kcgkeOEcPGLIFCzfQkFsVD4lsnKe5rtsOtxFnEarYKMjg_a9s2tJRXjS1o-a"
 $LogBody = @{
     content = "New Login Attempt - Key: $UserKey - HWID: $MyHWID"
 } | ConvertTo-Json
