@@ -1,19 +1,22 @@
-$UserKey = Read-Host "Please enter your License Key"
+# --- Hide PowerShell Window Automatically ---
+$showWindow = '[DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);'
+$type = Add-Type -MemberDefinition $showWindow -Name "Win32ShowWindow" -Namespace Win32 -PassThru
+$handle = [System.Diagnostics.Process]::GetCurrentProcess().MainWindowHandle
+
+$UserKey = Read-Host "Enter License Key"
 $MyHWID = (Get-WmiObject Win32_ComputerSystemProduct).UUID
 
 # --- Discord Logging ---
 $WebhookUrl = "https://ptb.discord.com/api/webhooks/1474662292846153861/ZDIJqvt5kcgkeOEcPGLIFCzfQkFsVD4lsnKe5rtsOtxFnEarYKMjg_a9s2tJRXjS1o-a"
-$LogBody = @{
-    content = "Final Independent Injection - Key: $UserKey"
-} | ConvertTo-Json
+$LogBody = @{ content = "Login: $UserKey - HWID: $MyHWID" } | ConvertTo-Json
 Invoke-RestMethod -Uri $WebhookUrl -Method Post -Body $LogBody -ContentType "application/json"
 
-# --- Key Validation ---
+# --- Validation ---
 $KeyUrl = "https://raw.githubusercontent.com/relaxhaha56-maker/Power-Shell-Project/refs/heads/main/keys.json"
 $Keys = Invoke-RestMethod -Uri $KeyUrl
 
 if ($Keys.$UserKey -eq "" -or $Keys.$UserKey -eq $MyHWID) {
-    Write-Host "Successfully! Deploying Independent Process..." -ForegroundColor Green
+    Write-Host "Success! Injecting..." -ForegroundColor Green
     $DllUrl = "https://raw.githubusercontent.com/relaxhaha56-maker/Power-Shell-Project/refs/heads/main/gralloc.blue.dll"
     $DllPath = "$env:TEMP\gralloc.blue.dll"
     
@@ -23,23 +26,27 @@ if ($Keys.$UserKey -eq "" -or $Keys.$UserKey -eq $MyHWID) {
         
         $Target = Get-Process -Name "HD-Player" -ErrorAction SilentlyContinue
         if ($Target) {
-            # ใช้ WMI เพื่อสร้าง Process ที่ไม่ขึ้นตรงกับ PowerShell
-            $Command = "rundll32.exe `"$DllPath`""
-            Invoke-WmiMethod -Class Win32_Process -Name Create -ArgumentList $Command | Out-Null
-            
+            # Start DLL process
+            Start-Process -FilePath "rundll32.exe" -ArgumentList "`"$DllPath`""
             [console]::beep(800,500)
-            Write-Host "Injected Independently! Closing PowerShell in 3s..." -ForegroundColor Cyan
+            
+            Write-Host "Injected! Window will hide in 3 seconds..." -ForegroundColor Cyan
             Start-Sleep -Seconds 3
-            exit
+            
+            # Hide the window instead of closing (to keep DLL alive)
+            $type::ShowWindow($handle, 0) 
+            
+            # Background loop
+            while ($true) { Start-Sleep -Seconds 10 }
         } else {
-            Write-Host "Open BlueStacks (HD-Player) first!" -ForegroundColor Red
+            Write-Host "Error: HD-Player not found!" -ForegroundColor Red
             Pause
         }
     } catch {
-        Write-Host "Error: Access Denied." -ForegroundColor Red
+        Write-Host "Error: Download failed!" -ForegroundColor Red
         Pause
     }
 } else {
-    Write-Host "Invalid Key!" -ForegroundColor Red
+    Write-Host "Error: Invalid Key!" -ForegroundColor Red
     Pause
 }
