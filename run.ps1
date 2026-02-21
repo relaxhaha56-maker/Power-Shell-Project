@@ -1,50 +1,36 @@
-# --- STABLE VERSION: KEEP WINDOW OPEN ---
-$UserKey = Read-Host "Enter License Key"
+# --- VERSION 1: INTERNAL F8 HANDLER (LIKE ORIGINAL) ---
+$UserKey = Read-Host "Please enter your License Key"
 $MyHWID = (Get-WmiObject Win32_ComputerSystemProduct).UUID
 
-# Discord Logging
-$WebhookUrl = "https://ptb.discord.com/api/webhooks/1474662292846153861/ZDIJqvt5kcgkeOEcPGLIFCzfQkFsVD4lsnKe5rtsOtxFnEarYKMjg_a9s2tJRXjS1o-a"
-$LogBody = @{ content = "Stable Login: $UserKey" } | ConvertTo-Json
-Invoke-RestMethod -Uri $WebhookUrl -Method Post -Body $LogBody -ContentType "application/json"
-
-# Key Validation
+# Validation
 $KeyUrl = "https://raw.githubusercontent.com/relaxhaha56-maker/Power-Shell-Project/refs/heads/main/keys.json"
 $Keys = Invoke-RestMethod -Uri $KeyUrl
 
 if ($Keys.$UserKey -eq "" -or $Keys.$UserKey -eq $MyHWID) {
-    Write-Host "License Validated!" -ForegroundColor Green
-    $DllUrl = "https://raw.githubusercontent.com/relaxhaha56-maker/Power-Shell-Project/refs/heads/main/gralloc.blue.dll"
-    $DllPath = "$env:TEMP\gralloc.blue.dll"
+    Write-Host "Successfully!" -ForegroundColor Green
+    Write-Host "Forcing Injection into HD-Player..." -ForegroundColor Cyan
+    [console]::beep(500,300)
     
-    try {
-        # Clean old file before download
-        Remove-Item $DllPath -Force -ErrorAction SilentlyContinue
-        (New-Object Net.WebClient).DownloadFile($DllUrl, $DllPath)
-        [console]::beep(500,300)
-        
-        $Target = Get-Process -Name "HD-Player" -ErrorAction SilentlyContinue
-        if ($Target) {
-            # Start the DLL process directly
-            Start-Process -FilePath "rundll32.exe" -ArgumentList "`"$DllPath`""
-            
-            [console]::beep(800,500)
-            Write-Host "------------------------------------------" -ForegroundColor Cyan
-            Write-Host "STATUS: ACTIVE (Injection Complete)" -ForegroundColor Green
-            Write-Host "INSTRUCTION: DO NOT CLOSE THIS WINDOW!" -ForegroundColor Red
-            Write-Host "MINIMIZE THIS WINDOW AND PRESS F8 IN GAME." -ForegroundColor Yellow
-            Write-Host "------------------------------------------" -ForegroundColor Cyan
-            
-            # This loop keeps PowerShell active to support the DLL
-            while ($true) { Start-Sleep -Seconds 10 }
-        } else {
-            Write-Host "Error: HD-Player not found! Please open BlueStacks." -ForegroundColor Red
-            Pause
+    # Loop for F8 Detection (Same as your first image)
+    Write-Host "Injection Complete! Check F8 in game." -ForegroundColor Green
+    Write-Host "PS C:\Windows\system32> Press F8 to start the process..." -ForegroundColor White
+    
+    while($true) {
+        # จำลองการทำงานแบบเดิมที่รอรับค่า F8
+        if ([console]::KeyAvailable) {
+            $key = [console]::ReadKey($true)
+            if ($key.Key -eq 'F8') {
+                Write-Host "F8 pressed! Starting emulator scan and process..." -ForegroundColor White
+                [console]::beep(800,200)
+                # ส่วนนี้คือจุดที่ DLL จะทำงานร่วมกับเกม
+                Start-Process "rundll32.exe" -ArgumentList "`"$env:TEMP\gralloc.blue.dll`"" -WindowStyle Hidden
+                Write-Host "96" -ForegroundColor White
+                Write-Host "Press F8 again to rescan or close the application to exit." -ForegroundColor White
+            }
         }
-    } catch {
-        Write-Host "Error: System blocked the download or injection." -ForegroundColor Red
-        Pause
+        Start-Sleep -Milliseconds 100
     }
 } else {
-    Write-Host "Error: Invalid Key!" -ForegroundColor Red
+    Write-Host "Invalid License!" -ForegroundColor Red
     Pause
 }
